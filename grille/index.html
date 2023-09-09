@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/css/bootstrap.min.css">
+    <title>JSON GENERATOR</title>
+    <style>
+        .form-control {
+            background-color: #f0f0f0!important;
+        }
+    </style>
+</head>
+<body>
+    <div class="container d-flex flex-column pt-3 gap-3 group">
+        <h1>
+            <a href="../index.html" class="text-decoration-none">
+                <svg width="40" height="40" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M8 0a8 8 0 1 0 0 16A8 8 0 0 0 8 0zm3.5 7.5a.5.5 0 0 1 0 1H5.707l2.147 2.146a.5.5 0 0 1-.708.708l-3-3a.5.5 0 0 1 0-.708l3-3a.5.5 0 1 1 .708.708L5.707 7.5H11.5z"/>
+                </svg>
+            </a>
+            &nbsp;
+            Grille d'évalutation / Questions complémentaires
+        </h1>
+        <div class="criteria-group d-flex flex-column gap-3">
+            <div class="input-group">
+                <span class="input-group-text">Titre</span>
+                <input type="text" class="form-control group-titre">
+                <button class="btn btn-danger btn-sm" onclick="deleteInput(this)">X</button>
+            </div>
+
+            <div class="ms-5 d-flex flex-column gap-2 criteria">
+
+                <div class="d-flex flex-row gap-2">
+                    <div class="input-group w-50">
+                        <span class="input-group-text">Critère</span>
+                        <input type="text" class="form-control criteria-titre">
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Points</span>
+                        <input type="number" value="1" min="0" step=".05" class="form-control criteria-nb-points">
+                    </div>
+                    <div class="input-group w-25">
+                        <span class="input-group-text">Nb Min</span>
+                        <input type="number" value="0" min="0" step="1" class="form-control criteria-nb-min">
+                    </div>
+                    <button class="btn btn-danger btn-sm" onclick="deleteInput(this)">X</button>
+                </div>
+                
+
+                <div class="ms-5 sub-criteria">
+                    <div class="input-group">
+                        <span class="input-group-text">Sous-critère</span>
+                        <input type="text" class="form-control sub-criteria-titre">
+                        <button class="btn btn-danger btn-sm" onclick="deleteInput(this)">X</button>
+                    </div>
+                </div>
+                <div>
+                    <button class="btn btn-primary btn-sm ms-5" onclick="addSubcriteria(this)">+ Ajouter un sous-critère</button>
+                </div>
+                
+            </div>
+
+            <div>
+                <button class="btn btn-primary btn-sm ms-5" onclick="addCriteria(this)">+ Ajouter un critère</button>
+            </div>
+        </div>
+     
+    </div>
+
+    <div class="container pt-2 pb-3">
+        <button class="btn btn-primary btn-sm" onclick="addGroup()">+ Ajouter un groupe</button>
+        <div class="d-flex w-100 my-5 gap-3">
+            <button class="btn btn-success w-100" onclick="getJSON(false)">JSON</button>
+            <button class="btn btn-warning w-100" onclick="getJSON(true)">JSON Formatté</button>
+        </div>
+        <textarea id="json" class="w-100 vh-100 d-none"></textarea>
+    </div>
+
+    
+    
+</body>
+<script>
+    let subCriteria = document.getElementsByClassName('sub-criteria')[0];
+    subCriteria.remove();
+    subCriteria = subCriteria.cloneNode(true);
+
+    const criteria = document.getElementsByClassName('criteria')[0].cloneNode(true);
+
+    const group = document.getElementsByClassName('criteria-group')[0].cloneNode(true);
+
+    function addSubcriteria(e) {
+        e.parentNode.before(subCriteria.cloneNode(true))
+    }
+
+    function addCriteria(e) {
+        e.parentNode.before(criteria.cloneNode(true))
+    }
+
+    function addGroup() {
+        document.getElementsByClassName('group')[0].append(group.cloneNode(true))
+    }
+
+    function deleteInput(e) {
+        e.parentNode.parentNode.remove();
+    }
+
+    function getJSON(format) {
+        const json = [];
+        Array.prototype.slice.call(document.getElementsByClassName('criteria-group')).forEach(group => {
+            const groupJSON = {};
+            groupJSON.titre = group.getElementsByClassName('group-titre')[0].value;
+            groupJSON.criteres = [];
+
+            const criterias = Array.prototype.slice.call(group.getElementsByClassName('criteria'));
+            criterias.forEach(criteria => {
+                const criteriaJSON = {};
+                criteriaJSON.titre = criteria.getElementsByClassName('criteria-titre')[0].value;
+                criteriaJSON.points = parseFloat(criteria.getElementsByClassName('criteria-nb-points')[0].value);
+                criteriaJSON.minimum_sous_criteres = parseInt(criteria.getElementsByClassName('criteria-nb-min')[0].value);
+                criteriaJSON.sous_criteres = [];
+
+                const subCriterias = Array.prototype.slice.call(criteria.getElementsByClassName('sub-criteria'));
+                subCriterias.forEach(subCriteria => {
+                    const subCriteriaJSON = {};
+                    subCriteriaJSON.titre = subCriteria.getElementsByClassName('sub-criteria-titre')[0].value;
+
+                    criteriaJSON.sous_criteres.push(subCriteriaJSON);
+                });
+
+                criteriaJSON.minimum_sous_criteres = Math.min(criteriaJSON.minimum_sous_criteres, criteriaJSON.sous_criteres.length)
+                if (criteriaJSON.sous_criteres.length === 0) {
+                    delete criteriaJSON.sous_criteres;
+                    delete criteriaJSON.minimum_sous_criteres;
+                }
+                groupJSON.criteres.push(criteriaJSON);
+            });
+
+            json.push(groupJSON);
+        });
+
+        document.getElementById('json').textContent = JSON.stringify(json, null, format ? '\t' : null);
+        document.getElementById('json').classList.remove('d-none')
+    }
+</script>
+</html>
