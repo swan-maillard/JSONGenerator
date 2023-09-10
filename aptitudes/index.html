@@ -5,10 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/js/bootstrap.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/easymde/dist/easymde.min.css">
+    <script src="https://unpkg.com/easymde/dist/easymde.min.js"></script>
     <title>JSON GENERATOR</title>
     <style>
         .form-control {
             background-color: #f0f0f0!important;
+        }
+
+        .EasyMDEContainer {
+            flex-grow: 1;
         }
     </style>
 </head>
@@ -62,9 +68,12 @@
 <script>
 
     const group = document.getElementsByClassName('performance')[0].cloneNode(true);
+    const editors = [];
+    editors.push(new EasyMDE({element: document.getElementsByClassName('performance-description')[0]}));
 
     function addPerformance() {
         document.getElementsByClassName('group')[0].append(group.cloneNode(true))
+        editors.push(new EasyMDE({element: document.getElementsByClassName('performance-description')[editors.length]}));
     }
 
     function deleteInput(e) {
@@ -73,10 +82,10 @@
 
     function getJSON(format) {
         const json = [];
-        Array.prototype.slice.call(document.getElementsByClassName('performance')).forEach(group => {
+        Array.prototype.slice.call(document.getElementsByClassName('performance')).forEach((group, index) => {
             const groupJSON = {};
             groupJSON.titre = group.getElementsByClassName('performance-titre')[0].value;
-            groupJSON.description = group.getElementsByClassName('performance-description')[0].value;
+            groupJSON.description = editors[index].value();
             groupJSON.points = group.getElementsByClassName('performance-points')[0].value;
 
             json.push(groupJSON);
