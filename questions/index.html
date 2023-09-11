@@ -21,33 +21,42 @@
                 </svg>
             </a>
             &nbsp;
-            Questions bonus
+            Questions complémentaires / Bonus
         </h1>
         <div class="criteria-group d-flex flex-column gap-3">
-            <div class="input-group">
-                <span class="input-group-text">Titre</span>
-                <input type="text" class="form-control group-titre">
+            <div class="d-flex flex-row gap-2">
+                <div class="input-group w-50">
+                    <span class="input-group-text">Titre</span>
+                    <input type="text" class="form-control criteria-titre">
+                </div>
+                <div class="input-group w-25">
+                    <span class="input-group-text">Points</span>
+                    <input type="number" value="1" min="0" step=".05" class="form-control criteria-nb-points">
+                </div>
+                <div class="input-group w-25">
+                    <span class="input-group-text">Nb Min</span>
+                    <input type="number" value="1" min="0" step="1" class="form-control criteria-nb-min">
+                </div>
                 <button class="btn btn-danger btn-sm" onclick="deleteInput(this)">X</button>
             </div>
-
-            <div class="ms-5 d-flex flex-column gap-2 criteria">
-
-                <div class="d-flex flex-row input-group">
+                
+            <div class="ms-5 sub-criteria">
+                <div class="input-group">
                     <span class="input-group-text">Critère</span>
-                    <input type="text" class="form-control criteria-titre">
+                    <input type="text" class="form-control sub-criteria-titre">
                     <button class="btn btn-danger btn-sm" onclick="deleteInput(this)">X</button>
                 </div>
             </div>
 
             <div>
-                <button class="btn btn-primary btn-sm ms-5" onclick="addCriteria(this)">+ Ajouter un critère</button>
+                <button class="btn btn-primary btn-sm ms-5" onclick="addSubcriteria(this)">+ Ajouter un critère</button>
             </div>
         </div>
      
     </div>
 
     <div class="container pt-2 pb-3">
-        <button class="btn btn-primary btn-sm" onclick="addGroup()">+ Ajouter un groupe</button>
+        <button class="btn btn-primary btn-sm" onclick="addGroup()">+ Ajouter une question</button>
         <div class="d-flex w-100 my-5 gap-3">
             <button class="btn btn-success w-100" onclick="getJSON(false)">JSON</button>
             <button class="btn btn-warning w-100" onclick="getJSON(true)">JSON Formatté</button>
@@ -59,12 +68,11 @@
     
 </body>
 <script>
-    const criteria = document.getElementsByClassName('criteria')[0].cloneNode(true);
-
+    const subCriteria = document.getElementsByClassName('sub-criteria')[0].cloneNode(true);
     const group = document.getElementsByClassName('criteria-group')[0].cloneNode(true);
 
-    function addCriteria(e) {
-        e.parentNode.before(criteria.cloneNode(true))
+    function addSubcriteria(e) {
+        e.parentNode.before(subCriteria.cloneNode(true))
     }
 
     function addGroup() {
@@ -79,15 +87,24 @@
         const json = [];
         Array.prototype.slice.call(document.getElementsByClassName('criteria-group')).forEach(group => {
             const groupJSON = {};
-            groupJSON.titre = group.getElementsByClassName('group-titre')[0].value;
+            groupJSON.titre = group.getElementsByClassName('criteria-titre')[0].value;
+            groupJSON.points = parseFloat(group.getElementsByClassName('criteria-nb-points')[0].value);
+            groupJSON.minimum_criteres = parseInt(group.getElementsByClassName('criteria-nb-min')[0].value);
             groupJSON.criteres = [];
 
-            const criterias = Array.prototype.slice.call(group.getElementsByClassName('criteria'));
+            const criterias = Array.prototype.slice.call(group.getElementsByClassName('sub-criteria'));
             criterias.forEach(criteria => {
                 const criteriaJSON = {};
-                criteriaJSON.titre = criteria.getElementsByClassName('criteria-titre')[0].value;
+                criteriaJSON.titre = criteria.getElementsByClassName('sub-criteria-titre')[0].value;
+
                 groupJSON.criteres.push(criteriaJSON);
             });
+
+            groupJSON.minimum_criteres = Math.min(groupJSON.minimum_criteres, groupJSON.criteres.length)
+            if (groupJSON.criteres.length === 0) {
+                delete groupJSON.criteres;
+                delete groupJSON.minimum_criteres;
+            }
 
             json.push(groupJSON);
         });
